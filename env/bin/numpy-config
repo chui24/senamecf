@@ -1,4 +1,4 @@
-#!/home/vit/Escritorio/senamecf/env/bin/python3
+#!/home/dell/Escritorio/senamecf/env/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

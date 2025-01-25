@@ -21,6 +21,23 @@ class DataHandler:
         new_row = pd.DataFrame([row])
         self.data = pd.concat([self.data, new_row], ignore_index=True)
 
+    def update_row(self, n_experticia, new_data):
+        """Actualizar una fila existente en el DataFrame"""
+        # Buscar la fila que coincida con el número de experticia
+        index = self.data[self.data["N de experticia"] == n_experticia].index
+        if not index.empty:
+            # Actualizar los valores de la fila
+            for key, value in new_data.items():
+                self.data.at[index[0], key] = value
+
+    def delete_row(self, n_experticia):
+        """Eliminar una fila existente en el DataFrame"""
+        # Buscar la fila que coincida con el número de experticia
+        index = self.data[self.data["N de experticia"] == n_experticia].index
+        if not index.empty:
+            # Eliminar la fila
+            self.data = self.data.drop(index)
+
     def save_data(self):
         """Guardar los datos en el archivo Excel"""
         self.data.to_excel(self.file_path, index=False)
