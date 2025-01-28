@@ -3,6 +3,57 @@ import flet as ft
 from logic.data_handler import DataHandler
 from styles.style import apply_styles
 
+def show_login_page(page: ft.Page):
+    # Configuración general de la página
+    page.title = "Sistema SENAMECF - Login"
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.padding = 0
+    page.bgcolor = "#f0f4f8"  # Color de fondo de la página
+
+    # Imagen de fondo
+    background_image = ft.Image(
+        src="https://pazactiva.org.ve/wp-content/uploads/2017/09/Senamecd-Morgue-Bello-Monte.jpg",  # URL de la imagen de fondo
+        width=page.width,
+        height=page.height,
+        fit=ft.ImageFit.COVER,
+    )
+
+    # Botón de "Entrar"
+    entrar_button = ft.ElevatedButton(
+        "Entrar",
+        on_click=lambda e: show_main_page(page),
+        bgcolor=ft.colors.BLUE_700,
+        color=ft.colors.WHITE,
+        height=50,
+        width=200,
+    )
+
+    # Contenedor para el botón, centrado en la pantalla
+    button_container = ft.Container(
+        content=entrar_button,
+        alignment=ft.alignment.center,
+    )
+
+    # Stack para superponer el botón sobre la imagen de fondo
+    login_stack = ft.Stack(
+        [
+            background_image,
+            button_container,
+        ],
+        expand=True,
+    )
+
+    # Agregar el stack a la página
+    page.add(login_stack)
+
+def show_main_page(page: ft.Page):
+    # Limpiar la página actual
+    page.clean()
+
+    # Llamar a la función principal que ya tienes definida
+    main(page)
+
 def main(page: ft.Page):
     apply_styles(page)
 
@@ -10,8 +61,9 @@ def main(page: ft.Page):
     page.title = "Sistema SENAMECF"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.START
-    page.padding = 50
+    page.padding = 20
     page.scroll = ft.ScrollMode.AUTO
+    page.bgcolor = "#f0f4f8"  # Color de fondo de la página
     page.update()
 
     # ------------- ESTADOS GLOBALES -------------
@@ -25,22 +77,23 @@ def main(page: ft.Page):
     # --------------------------------------------------------------------------
     # SECCIÓN SUPERIOR: LOGO + ENUNCIADOS
     # --------------------------------------------------------------------------
-    logo_container = ft.Container(
+    logo_container = ft.Image(
         width=80,
         height=80,
-        alignment=ft.alignment.center,
-        border=ft.border.all(1, ft.Colors.BLACK),
-        content=ft.Text("LOGO", size=14)
+        border_radius=10,
+        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRq8-JJDDAeO5iI5w3K3lDkGnHlNoFYPTCsVQ&s"
     )
 
     enunciado_text = ft.Text(
-        "ENUNCIADO",
+        "Evaluaciones medico-legales",
         size=24,
         weight=ft.FontWeight.BOLD,
+        color=ft.colors.BLUE_900,
     )
     subenunciado_text = ft.Text(
-        "AQUÍ VA A IR MÁS TEXTO.",
+        "SENAMECF - Núcleo Mérida",
         size=16,
+        color=ft.colors.GREY_700,
     )
 
     top_section = ft.Row(
@@ -72,6 +125,11 @@ def main(page: ft.Page):
     filter_field = ft.TextField(
         label="Filtro",
         width=400,
+        height=45,
+        border_radius=25,
+        filled=True,
+        bgcolor=ft.colors.WHITE,
+        border_color=ft.colors.GREY_400,
         on_change=do_filter,  # Filtra mientras escribes
     )
 
@@ -87,7 +145,14 @@ def main(page: ft.Page):
         modal_dialog.open = True
         page.update()
 
-    show_form_button = ft.ElevatedButton("Agregar registro", on_click=open_modal)
+    show_form_button = ft.ElevatedButton(
+        "Agregar registro",
+        on_click=open_modal,
+        bgcolor=ft.colors.BLUE_700,
+        color=ft.colors.WHITE,
+        height=45,
+        width=150,
+    )
 
     filter_layout = ft.Row(
         [
@@ -112,8 +177,9 @@ def main(page: ft.Page):
             height=45,
             border_radius=25,
             filled=True,
-            border_color="#cccccc",
-            text_style=ft.TextStyle(color=ft.Colors.BLACK),
+            bgcolor=ft.colors.WHITE,
+            border_color=ft.colors.GREY_400,
+            text_style=ft.TextStyle(color=ft.colors.BLACK),
             expand=1,
         )
 
@@ -180,8 +246,20 @@ def main(page: ft.Page):
                 cells = [ft.DataCell(ft.Text(str(value))) for value in row]
                 
                 # Agregar los botones de "Editar" y "Eliminar" como una celda adicional
-                edit_button = ft.ElevatedButton("Editar", on_click=lambda e, row=row: edit_row(row))
-                delete_button = ft.ElevatedButton("Eliminar", on_click=lambda e, row=row: delete_row(row))
+                edit_button = ft.ElevatedButton(
+                    "Editar",
+                    on_click=lambda e, row=row: edit_row(row),
+                    bgcolor=ft.colors.BLUE_700,
+                    color=ft.colors.WHITE,
+                    height=30,
+                )
+                delete_button = ft.ElevatedButton(
+                    "Eliminar",
+                    on_click=lambda e, row=row: delete_row(row),
+                    bgcolor=ft.colors.RED_700,
+                    color=ft.colors.WHITE,
+                    height=30,
+                )
                 actions_cell = ft.DataCell(ft.Row([edit_button, delete_button], spacing=5))
                 
                 # Asegurar que haya exactamente 12 celdas (11 columnas de datos + 1 de acciones)
@@ -206,26 +284,26 @@ def main(page: ft.Page):
         elif page_num > total_pages:
             page_num = total_pages
         current_page = page_num
-        refresh_table()  # Llamar a refresh_table después de definirla
+        refresh_table()
 
     # --------------------------------------------------------------------------
     # DATATABLE
     # --------------------------------------------------------------------------
     records_table = ft.DataTable(
-        border=ft.border.all(1, ft.Colors.BLACK),
+        border=ft.border.all(1, ft.colors.GREY_400),
         columns=[
-            ft.DataColumn(ft.Container(width=100, content=ft.Text("N° de experticia"))),
-            ft.DataColumn(ft.Container(width=100, content=ft.Text("Fecha"))),
-            ft.DataColumn(ft.Container(width=150, content=ft.Text("Apellido y nombre"))),
-            ft.DataColumn(ft.Container(width=100, content=ft.Text("Salida"))),
-            ft.DataColumn(ft.Container(width=200, content=ft.Text("Días de incapacidad/Recuperación"))),
-            ft.DataColumn(ft.Container(width=150, content=ft.Text("Fecha de entrega"))),
-            ft.DataColumn(ft.Container(width=80,  content=ft.Text("Edad"))),
-            ft.DataColumn(ft.Container(width=150, content=ft.Text("Motivo de la experticia"))),
-            ft.DataColumn(ft.Container(width=100, content=ft.Text("Médico"))),
-            ft.DataColumn(ft.Container(width=100, content=ft.Text("Organismo"))),
-            ft.DataColumn(ft.Container(width=150, content=ft.Text("Expediente/causa"))),
-            ft.DataColumn(ft.Container(width=100, content=ft.Text("Acciones"))),
+            ft.DataColumn(ft.Container(width=100, content=ft.Text("N° de experticia", color=ft.colors.BLUE_900))),
+            ft.DataColumn(ft.Container(width=100, content=ft.Text("Fecha", color=ft.colors.BLUE_900))),
+            ft.DataColumn(ft.Container(width=150, content=ft.Text("Apellido y nombre", color=ft.colors.BLUE_900))),
+            ft.DataColumn(ft.Container(width=100, content=ft.Text("Salida", color=ft.colors.BLUE_900))),
+            ft.DataColumn(ft.Container(width=200, content=ft.Text("Días de incapacidad/Recuperación", color=ft.colors.BLUE_900))),
+            ft.DataColumn(ft.Container(width=150, content=ft.Text("Fecha de entrega", color=ft.colors.BLUE_900))),
+            ft.DataColumn(ft.Container(width=80,  content=ft.Text("Edad", color=ft.colors.BLUE_900))),
+            ft.DataColumn(ft.Container(width=150, content=ft.Text("Motivo de la experticia", color=ft.colors.BLUE_900))),
+            ft.DataColumn(ft.Container(width=100, content=ft.Text("Médico", color=ft.colors.BLUE_900))),
+            ft.DataColumn(ft.Container(width=100, content=ft.Text("Organismo", color=ft.colors.BLUE_900))),
+            ft.DataColumn(ft.Container(width=150, content=ft.Text("Expediente/causa", color=ft.colors.BLUE_900))),
+            ft.DataColumn(ft.Container(width=100, content=ft.Text("Acciones", color=ft.colors.BLUE_900))),
         ],
         rows=[]
     )
@@ -239,15 +317,30 @@ def main(page: ft.Page):
         content=scrollable_table,
         width='100%',
         height='100%',
-        border=ft.border.all(1, ft.Colors.BLACK),
+        border=ft.border.all(1, ft.colors.GREY_400),
+        border_radius=10,
+        bgcolor=ft.colors.WHITE,
+        padding=10,
     )
 
     # --------------------------------------------------------------------------
     # PAGINACIÓN
     # --------------------------------------------------------------------------
-    pagination_info = ft.Text(value="Página 1 de 1")
-    prev_page_button = ft.ElevatedButton("Página anterior", on_click=lambda e: go_to_page(current_page - 1))
-    next_page_button = ft.ElevatedButton("Página siguiente", on_click=lambda e: go_to_page(current_page + 1))
+    pagination_info = ft.Text(value="Página 1 de 1", color=ft.colors.BLUE_900)
+    prev_page_button = ft.ElevatedButton(
+        "Página anterior",
+        on_click=lambda e: go_to_page(current_page - 1),
+        bgcolor=ft.colors.BLUE_700,
+        color=ft.colors.WHITE,
+        height=40,
+    )
+    next_page_button = ft.ElevatedButton(
+        "Página siguiente",
+        on_click=lambda e: go_to_page(current_page + 1),
+        bgcolor=ft.colors.BLUE_700,
+        color=ft.colors.WHITE,
+        height=40,
+    )
 
     pagination_layout = ft.Row(
         [
@@ -262,9 +355,25 @@ def main(page: ft.Page):
     # --------------------------------------------------------------------------
     # BOTONES DEL FORMULARIO
     # --------------------------------------------------------------------------
-    btn_agregar = ft.ElevatedButton("Agregar Datos", disabled=True)
-    btn_refrescar = ft.ElevatedButton("Refrescar vista")
-    btn_cerrar = ft.ElevatedButton("Cerrar")
+    btn_agregar = ft.ElevatedButton(
+        "Agregar Datos",
+        disabled=True,
+        bgcolor=ft.colors.BLUE_700,
+        color=ft.colors.WHITE,
+        height=40,
+    )
+    btn_refrescar = ft.ElevatedButton(
+        "Refrescar vista",
+        bgcolor=ft.colors.GREY_700,
+        color=ft.colors.WHITE,
+        height=40,
+    )
+    btn_cerrar = ft.ElevatedButton(
+        "Cerrar",
+        bgcolor=ft.colors.RED_700,
+        color=ft.colors.WHITE,
+        height=40,
+    )
 
     def add_data(e):
         handler.add_row({
@@ -331,7 +440,7 @@ def main(page: ft.Page):
         horizontal_alignment=ft.CrossAxisAlignment.CENTER
     )
 
-    dialog_title_text = ft.Text("Agregar registro", size=30, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
+    dialog_title_text = ft.Text("Agregar registro", size=30, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER, color=ft.colors.BLUE_900)
     dialog_title = ft.Row(
         [dialog_title_text],
         alignment=ft.MainAxisAlignment.CENTER
@@ -341,14 +450,14 @@ def main(page: ft.Page):
         content=formulario,
         width=700,
         height=400,
-        bgcolor=ft.Colors.WHITE,
+        bgcolor=ft.colors.WHITE,
         border_radius=ft.border_radius.all(10),
         padding=20,
         alignment=ft.alignment.center
     )
 
     modal_dialog = ft.AlertDialog(
-        modal=False,
+        modal=True,  # Cambiado a True para evitar interacción con el fondo
         title=dialog_title,
         content=modal_content,
         on_dismiss=close_modal
@@ -407,11 +516,21 @@ def main(page: ft.Page):
 
     confirm_dialog = ft.AlertDialog(
         modal=True,
-        title=ft.Text("Confirmar eliminación"),
-        content=ft.Text("¿Estás seguro de que deseas eliminar este registro?"),
+        title=ft.Text("Confirmar eliminación", color=ft.colors.BLUE_900),
+        content=ft.Text("¿Estás seguro de que deseas eliminar este registro?", color=ft.colors.GREY_700),
         actions=[
-            ft.ElevatedButton("Sí", on_click=lambda e: confirm_delete(e)),
-            ft.ElevatedButton("No", on_click=lambda e: cancel_delete(e)),
+            ft.ElevatedButton(
+                "Sí",
+                on_click=lambda e: confirm_delete(e),
+                bgcolor=ft.colors.BLUE_700,
+                color=ft.colors.WHITE,
+            ),
+            ft.ElevatedButton(
+                "No",
+                on_click=lambda e: cancel_delete(e),
+                bgcolor=ft.colors.RED_700,
+                color=ft.colors.WHITE,
+            ),
         ],
     )
 
@@ -462,7 +581,8 @@ def main(page: ft.Page):
                 table_container,   # Contenedor con scroll horizontal
                 pagination_layout  # Paginación
             ],
-            expand=True
+            expand=True,
+            spacing=20,
         )
     )
 
@@ -474,4 +594,4 @@ def main(page: ft.Page):
     go_to_page(1)
 
 if __name__ == "__main__":
-    ft.app(target=main)
+    ft.app(target=show_login_page)
