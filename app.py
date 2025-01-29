@@ -233,6 +233,8 @@ def main(page: ft.Page):
         return max(1, math.ceil(len(filtered_data) / items_per_page))
 
     def refresh_table():
+        global filtered_data
+        filtered_data = handler.get_data()  # Recargar datos antes de refrescar la tabla
         records_table.rows.clear()
         total_pages = get_total_pages()
         start_idx = (current_page - 1) * items_per_page
@@ -585,6 +587,44 @@ def main(page: ft.Page):
             spacing=20,
         )
     )
+
+    # Crear los botones de importación, exportación y refrescar vista
+    import_button = ft.ElevatedButton(
+        "Importar Archivo", 
+        on_click=lambda e: handler.import_data(page, refresh_table),
+        style=ft.ButtonStyle(
+            bgcolor=ft.colors.YELLOW_700,  # Color azul oscuro
+            color=ft.colors.WHITE        # Color de texto blanco
+        )
+    )
+
+    export_button = ft.ElevatedButton(
+        "Exportar Archivo", 
+        on_click=lambda e: handler.export_data(page),  # LLAMADA CORRECTA
+        style=ft.ButtonStyle(
+            bgcolor=ft.colors.BLUE_700,
+            color=ft.colors.WHITE
+        )
+    )
+
+
+    refresh_button = ft.ElevatedButton(
+        "Refrescar Vista", 
+        on_click=lambda e: refresh_table(),
+        style=ft.ButtonStyle(
+            bgcolor=ft.colors.RED_700,  # Color azul oscuro
+            color=ft.colors.WHITE        # Color de texto blanco
+        )
+    )
+
+
+
+    # Agregar los tres botones en una sola fila
+    page.add(
+        ft.Row([import_button, export_button, refresh_button], spacing=20)
+    )
+
+
 
     # --------------------------------------------------------------------------
     # CARGA INICIAL DE DATOS
