@@ -2,6 +2,19 @@ import math
 import flet as ft
 from logic.data_handler import DataHandler
 from styles.style import apply_styles
+import tkinter as tk
+from tkinter import filedialog
+
+def open_file_dialog():
+    """Abrir un cuadro de diálogo para seleccionar un archivo."""
+    root = tk.Tk()
+    root.withdraw()  # Ocultar la ventana principal de tkinter
+    file_path = filedialog.askopenfilename(
+        title="Seleccionar archivo",
+        filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")]
+    )
+    return file_path
+
 
 def show_login_page(page: ft.Page):
     # Configuración general de la página
@@ -19,10 +32,10 @@ def show_login_page(page: ft.Page):
         fit=ft.ImageFit.COVER,
     )
 
-    # Botón de "Entrar"
-    entrar_button = ft.ElevatedButton(
-        "Entrar",
-        on_click=lambda e: show_main_page(page),
+    # Botón de "Importar archivo"
+    importar_button = ft.ElevatedButton(
+        "Importar archivo",
+        on_click=lambda e: import_data_and_show_main_page(page),
         bgcolor=ft.colors.BLUE_700,
         color=ft.colors.WHITE,
         height=50,
@@ -31,7 +44,7 @@ def show_login_page(page: ft.Page):
 
     # Contenedor para el botón, centrado en la pantalla
     button_container = ft.Container(
-        content=entrar_button,
+        content=importar_button,
         alignment=ft.alignment.center,
     )
 
@@ -46,6 +59,29 @@ def show_login_page(page: ft.Page):
 
     # Agregar el stack a la página
     page.add(login_stack)
+
+    # Manejador de evento para cuando la página se cierra
+    def on_close(e):
+        try:
+            handler.save_data()  # Guardar los datos antes de cerrar
+            page.snack_bar = ft.SnackBar(ft.Text("Datos guardados correctamente antes de cerrar."))
+            page.snack_bar.open = True
+            page.update()
+        except Exception as e:
+            page.snack_bar = ft.SnackBar(ft.Text(f"Error al guardar los datos: {e}"))
+            page.snack_bar.open = True
+            page.update()
+
+    # Asignar el manejador de eventos al evento on_close
+    page.on_close = on_close
+
+def import_data_and_show_main_page(page: ft.Page):
+    """Función para importar un archivo y luego mostrar la pantalla principal."""
+    import_path = open_file_dialog()
+    if import_path:
+        global handler
+        handler = DataHandler(import_path)  # Crear un nuevo DataHandler con el archivo importado
+        show_main_page(page)  # Mostrar la pantalla principal
 
 def show_main_page(page: ft.Page):
     # Limpiar la página actual
@@ -63,6 +99,7 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.START
     page.padding = 20
     page.scroll = ft.ScrollMode.AUTO
+
     page.bgcolor = "#f0f4f8"  # Color de fondo de la página
     page.update()
 
@@ -96,6 +133,83 @@ def main(page: ft.Page):
         color=ft.colors.GREY_700,
     )
 
+    # Menú desplegable para importar y exportar
+    def import_data(e):
+        import_path = open_file_dialog()
+        if import_path:
+            handler.import_data(import_path)
+            load_and_sort_data()
+            apply_filter()
+            go_to_page(1)
+            page.update()
+
+    def export_data(e):
+        """Guardar los datos actuales sobrescribiendo el archivo actual."""
+        try:
+            handler.save_data()  # Sobrescribir el archivo actual
+            page.snack_bar = ft.SnackBar(ft.Text("Archivo guardado correctamente"))
+            page.snack_bar.open = True
+            page.update()
+        except Exception as e:
+            page.snack_bar = ft.SnackBar(ft.Text(f"Error al guardar el archivo: {e}"))
+            page.snack_bar.open = True
+            page.update()
+
+    menu_items = [
+        ft.PopupMenuItem(text="Importar", on_click=import_data),
+        ft.PopupMenuItem(text="Exportar", on_click=export_data),
+    ]
+
+    menu = ft.PopupMenuButton(
+        items=menu_items,
+        icon=ft.icons.MENU,
+        tooltip="Opciones",
+    )
+    
+    # Función para exportar el archivo
+    def export_data_as(e):
+        """Exportar el archivo a una ubicación específica."""
+        root = tk.Tk()
+        root.withdraw()  # Ocultar la ventana principal de tkinter
+        file_path = filedialog.asksaveasfilename(
+            title="Guardar como",
+            filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
+            defaultextension=".xlsx"
+        )
+        if file_path:
+            try:
+                handler.export_data(file_path)  # Exportar el archivo a la ubicación seleccionada
+                page.snack_bar = ft.SnackBar(ft.Text(f"Archivo guardado en: {file_path}"))
+                page.snack_bar.open = True
+                page.update()
+            except Exception as e:
+                page.snack_bar = ft.SnackBar(ft.Text(f"Error al guardar el archivo: {e}"))
+                page.snack_bar.open = True
+                page.update()
+                
+    # Ícono de exportar (guardar como)
+    export_icon = ft.IconButton(
+        icon=ft.icons.UPLOAD,  # Cambiar a un ícono que represente mejor la exportación
+        on_click=export_data_as,  # Llamar a la función export_data_as
+        tooltip="Exportar archivo a otra ubicación",  # Tooltip más descriptivo
+        icon_color=ft.colors.BLUE_700,
+    )
+    
+    # Ícono de guardar (exportar)
+    save_icon = ft.IconButton(
+        icon=ft.icons.SAVE,
+        on_click=export_data,  # Llamar a la función export_data
+        tooltip="Guardar archivo",
+        icon_color=ft.colors.BLUE_700,
+    )
+    # Contenedor para los íconos, alineado a la derecha
+    icons_container = ft.Container(
+        content=ft.Row([save_icon, export_icon], spacing=10),
+        alignment=ft.alignment.top_right,
+        expand=True,  # Ocupar todo el espacio disponible
+    )
+
+    # Sección superior con el logo, enunciado y los íconos
     top_section = ft.Row(
         [
             logo_container,
@@ -107,12 +221,13 @@ def main(page: ft.Page):
                 alignment=ft.MainAxisAlignment.START,
                 horizontal_alignment=ft.CrossAxisAlignment.START
             ),
+            icons_container,  # Contenedor de los íconos
         ],
         alignment=ft.MainAxisAlignment.START,
         vertical_alignment=ft.CrossAxisAlignment.START,
-        spacing=20
+        spacing=10,
+        expand=True,  # Asegurar que el Row ocupe todo el ancho disponible
     )
-
     # --------------------------------------------------------------------------
     # FILTRO (TextField) Y BOTÓN PARA MOSTRAR FORMULARIO
     # --------------------------------------------------------------------------
