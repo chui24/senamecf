@@ -122,13 +122,13 @@ def main(page: ft.Page):
     )
 
     enunciado_text = ft.Text(
-        "Evaluaciones medico-legales",
+        "Experticias médico-forenses",
         size=24,
         weight=ft.FontWeight.BOLD,
         color=ft.colors.BLUE_900,
     )
     subenunciado_text = ft.Text(
-        "SENAMECF - Núcleo Mérida",
+        "Servicio Municipal SENAMECF Mérida",
         size=16,
         color=ft.colors.GREY_700,
     )
