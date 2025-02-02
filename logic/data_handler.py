@@ -1,5 +1,7 @@
 import pandas as pd
 from datetime import datetime
+import flet as ft
+
 
 class DataHandler:
     def __init__(self, file_path):
@@ -85,3 +87,11 @@ class DataHandler:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_path = self.file_path.replace(".xlsx", f"_backup_{timestamp}.xlsx")
         return backup_path
+    
+
+def open_save_file_dialog(page: ft.Page, on_file_selected):
+    """Abrir un cuadro de diálogo para seleccionar la ubicación de guardado."""
+    file_picker = ft.FilePicker(on_result=on_file_selected)
+    page.overlay.append(file_picker)
+    page.update()
+    file_picker.save_file(allowed_extensions=["xlsx"])

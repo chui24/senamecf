@@ -5,15 +5,12 @@ from styles.style import apply_styles
 import tkinter as tk
 from tkinter import filedialog
 
-def open_file_dialog():
-    """Abrir un cuadro de diálogo para seleccionar un archivo."""
-    root = tk.Tk()
-    root.withdraw()  # Ocultar la ventana principal de tkinter
-    file_path = filedialog.askopenfilename(
-        title="Seleccionar archivo",
-        filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")]
-    )
-    return file_path
+def open_file_dialog(page: ft.Page, on_file_selected):
+    """Abrir un cuadro de diálogo para seleccionar un archivo usando FilePicker de Flet."""
+    file_picker = ft.FilePicker(on_result=on_file_selected)
+    page.overlay.append(file_picker)
+    page.update()
+    file_picker.pick_files(allowed_extensions=["xlsx"])
 
 
 def show_login_page(page: ft.Page):
@@ -77,11 +74,14 @@ def show_login_page(page: ft.Page):
 
 def import_data_and_show_main_page(page: ft.Page):
     """Función para importar un archivo y luego mostrar la pantalla principal."""
-    import_path = open_file_dialog()
-    if import_path:
-        global handler
-        handler = DataHandler(import_path)  # Crear un nuevo DataHandler con el archivo importado
-        show_main_page(page)  # Mostrar la pantalla principal
+    def on_file_selected(e: ft.FilePickerResultEvent):
+        if e.files:
+            import_path = e.files[0].path
+            global handler
+            handler = DataHandler(import_path)  # Crear un nuevo DataHandler con el archivo importado
+            show_main_page(page)  # Mostrar la pantalla principal
+
+    open_file_dialog(page, on_file_selected)
 
 def show_main_page(page: ft.Page):
     # Limpiar la página actual
