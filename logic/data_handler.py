@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 import flet as ft
+import os 
 
 
 class DataHandler:
@@ -50,9 +51,16 @@ class DataHandler:
         :param custom_path: Ruta personalizada para guardar el archivo (opcional).
         """
         if custom_path:
-            self.data.to_excel(custom_path, index=False)
+            save_path = custom_path
         else:
-            self.data.to_excel(self.file_path, index=False)
+            save_path = self.file_path
+
+        # Crear la carpeta si no existe
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+        self.data.to_excel(save_path, index=False)
+
+
 
     def get_data(self):
         """Obtener los datos como una lista de filas"""
@@ -88,6 +96,14 @@ class DataHandler:
         backup_path = self.file_path.replace(".xlsx", f"_backup_{timestamp}.xlsx")
         return backup_path
     
+    def export_data(self, file_path):
+        """Guarda los datos en un archivo Excel en la ubicación especificada."""
+        try:
+            self.data.to_excel(file_path, index=False)  
+            print(f"✅ Archivo exportado a: {file_path}")  # Debug en consola
+        except Exception as e:
+            print(f"❌ Error al exportar archivo: {e}")
+
 
 def open_save_file_dialog(page: ft.Page, on_file_selected):
     """Abrir un cuadro de diálogo para seleccionar la ubicación de guardado."""

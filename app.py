@@ -4,6 +4,30 @@ from logic.data_handler import DataHandler
 from styles.style import apply_styles
 import tkinter as tk
 from tkinter import filedialog
+import sys
+import logging 
+import os 
+
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
+# Usar resource_path para obtener las rutas correctas
+data_path = resource_path("data/datos.xlsx")
+styles_path = resource_path("styles/style.py")
+logic_data_handler_path = resource_path("logic/data_handler.py")
+logic_search_handler_path = resource_path("logic/search_handler.py")
+
+
 
 def open_file_dialog(page: ft.Page, on_file_selected):
     """Abrir un cuadro de diálogo para seleccionar un archivo usando FilePicker de Flet."""
@@ -31,8 +55,8 @@ def show_login_page(page: ft.Page):
 
     # Botón de "Importar archivo"
     importar_button = ft.ElevatedButton(
-        "Importar archivo",
-        on_click=lambda e: import_data_and_show_main_page(page),
+        "Ingresar",
+        on_click=lambda e: show_main_page(page),
         bgcolor=ft.colors.BLUE_700,
         color=ft.colors.WHITE,
         height=50,
@@ -72,22 +96,15 @@ def show_login_page(page: ft.Page):
     # Asignar el manejador de eventos al evento on_close
     page.on_close = on_close
 
-def import_data_and_show_main_page(page: ft.Page):
-    """Función para importar un archivo y luego mostrar la pantalla principal."""
-    def on_file_selected(e: ft.FilePickerResultEvent):
-        if e.files:
-            import_path = e.files[0].path
-            global handler
-            handler = DataHandler(import_path)  # Crear un nuevo DataHandler con el archivo importado
-            show_main_page(page)  # Mostrar la pantalla principal
 
-    open_file_dialog(page, on_file_selected)
 
 def show_main_page(page: ft.Page):
-    # Limpiar la página actual
+    
+
     page.clean()
 
-    # Llamar a la función principal que ya tienes definida
+    page.update()
+
     main(page)
 
 def main(page: ft.Page):
@@ -166,31 +183,33 @@ def main(page: ft.Page):
         tooltip="Opciones",
     )
     
-    # Función para exportar el archivo
     def export_data_as(e):
         """Exportar el archivo a una ubicación específica."""
         root = tk.Tk()
-        root.withdraw()  # Ocultar la ventana principal de tkinter
+        root.withdraw()  # Ocultar la ventana de tkinter
         file_path = filedialog.asksaveasfilename(
             title="Guardar como",
             filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
             defaultextension=".xlsx"
         )
+        
         if file_path:
             try:
                 handler.export_data(file_path)  # Exportar el archivo a la ubicación seleccionada
-                page.snack_bar = ft.SnackBar(ft.Text(f"Archivo guardado en: {file_path}"))
-                page.snack_bar.open = True
+                snack_bar = ft.SnackBar(ft.Text(f"✅ Archivo guardado en: {file_path}"))
+                page.overlay.append(snack_bar)  # Nueva forma de usar SnackBar
+                snack_bar.open = True
                 page.update()
             except Exception as e:
-                page.snack_bar = ft.SnackBar(ft.Text(f"Error al guardar el archivo: {e}"))
-                page.snack_bar.open = True
+                snack_bar = ft.SnackBar(ft.Text(f"❌ Error al guardar el archivo: {e}"))
+                page.overlay.append(snack_bar)  # Nueva forma de usar SnackBar
+                snack_bar.open = True
                 page.update()
-                
+    
     # Ícono de exportar (guardar como)
     export_icon = ft.IconButton(
         icon=ft.icons.UPLOAD,  # Cambiar a un ícono que represente mejor la exportación
-        on_click=export_data_as,  # Llamar a la función export_data_as
+        on_click=lambda e: export_data_as(page),
         tooltip="Exportar archivo a otra ubicación",  # Tooltip más descriptivo
         icon_color=ft.colors.BLUE_700,
     )
@@ -198,7 +217,7 @@ def main(page: ft.Page):
     # Ícono de guardar (exportar)
     save_icon = ft.IconButton(
         icon=ft.icons.SAVE,
-        on_click=export_data,  # Llamar a la función export_data
+        on_click=lambda e: export_data_as(page),
         tooltip="Guardar archivo",
         icon_color=ft.colors.BLUE_700,
     )
