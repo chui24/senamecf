@@ -98,6 +98,8 @@ def show_login_page(page: ft.Page):
 
 
 
+
+
 def show_main_page(page: ft.Page):
     
 
@@ -110,6 +112,7 @@ def show_main_page(page: ft.Page):
 def main(page: ft.Page):
     apply_styles(page)
 
+    
     # Configuración general de la página
     page.title = "Sistema SENAMECF"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
@@ -206,11 +209,59 @@ def main(page: ft.Page):
                 snack_bar.open = True
                 page.update()
     
-    # Ícono de exportar (guardar como)
-    export_icon = ft.IconButton(
-        icon=ft.icons.UPLOAD,  # Cambiar a un ícono que represente mejor la exportación
-        on_click=lambda e: export_data_as(page),
-        tooltip="Exportar archivo a otra ubicación",  # Tooltip más descriptivo
+
+    def import_data_as(e, page):
+        """Abrir un cuadro de diálogo para seleccionar un archivo e importarlo."""
+        root = tk.Tk()
+        root.withdraw()  # Oculta la ventana principal de Tkinter
+
+        file_path = filedialog.askopenfilename(
+            title="Seleccionar archivo Excel",
+            filetypes=[("Archivos Excel", "*.xlsx")]
+        )
+
+        if file_path:  # Si el usuario seleccionó un archivo
+            try:
+                handler.import_data(file_path)  # Importar los datos usando DataHandler
+                print(f"Datos importados desde: {file_path}")
+
+                # ACTUALIZAR LA VARIABLE `filtered_data` PARA REFLEJAR LOS NUEVOS DATOS
+                global filtered_data  # Asegurar que se modifique la variable global
+                filtered_data = handler.get_data()  # Obtener los datos importados
+                print("Datos después de la importación:", filtered_data)
+
+                refresh_table()  # **Llamamos una sola vez a refresh_table**
+                page.update()  # Asegurar que la vista se actualice
+
+                # Mostrar mensaje de éxito
+                snack_bar = ft.SnackBar(ft.Text(f"Datos importados desde: {file_path}"))
+            except Exception as e:
+                # Manejar errores de importación
+                snack_bar = ft.SnackBar(ft.Text(f"Error al importar datos: {e}"))
+
+            # Agregar y mostrar el snack_bar
+            page.overlay.append(snack_bar)
+            snack_bar.open = True
+            page.update()
+
+    def reload_view(e, page):
+        """Función para forzar la actualización de la vista."""
+        print("Recargando la vista...")
+        page.clean()  # Borra todos los elementos de la UI
+        main(page)  # Llama a la función principal para reconstruir la UI
+
+    # Botón de actualizar vista con ícono de refresh
+    refresh_icon = ft.IconButton(
+        icon=ft.icons.REFRESH,
+        on_click=lambda e: reload_view(e, page),  # Pasar 'page' como argumento
+        tooltip="Actualizar vista",
+        icon_color=ft.colors.GREEN_700,
+    )
+
+    import_icon = ft.IconButton(
+        icon=ft.icons.UPLOAD,
+        on_click=lambda e: import_data_as(e, page),  # Se pasan ambos argumentos
+        tooltip="Importar archivo desde otra ubicación",
         icon_color=ft.colors.BLUE_700,
     )
     
@@ -223,7 +274,7 @@ def main(page: ft.Page):
     )
     # Contenedor para los íconos, alineado a la derecha
     icons_container = ft.Container(
-        content=ft.Row([save_icon, export_icon], spacing=10),
+        content=ft.Row([save_icon, import_icon, refresh_icon], spacing=10),
         alignment=ft.alignment.top_right,
         expand=True,  # Ocupar todo el espacio disponible
     )
@@ -366,20 +417,21 @@ def main(page: ft.Page):
     def get_total_pages():
         return max(1, math.ceil(len(filtered_data) / items_per_page))
 
-    def refresh_table():
+    def refresh_table(page):
+        print("Ejecutando refresh_table()...")  # Depuración
+
         records_table.rows.clear()
         total_pages = get_total_pages()
         start_idx = (current_page - 1) * items_per_page
         end_idx = start_idx + items_per_page
         page_rows = filtered_data[start_idx:end_idx]
 
+        print("Datos a agregar en la tabla:", page_rows)  # Depuración
+
         for row in page_rows:
-            # Verificar si la fila contiene valores None o cadenas vacías
             if not any(value is None or value == "" for value in row):
-                # Crear las celdas para cada columna
                 cells = [ft.DataCell(ft.Text(str(value))) for value in row]
-                
-                # Agregar los botones de "Editar" y "Eliminar" como una celda adicional
+
                 edit_button = ft.ElevatedButton(
                     "Editar",
                     on_click=lambda e, row=row: edit_row(row),
@@ -395,20 +447,21 @@ def main(page: ft.Page):
                     height=30,
                 )
                 actions_cell = ft.DataCell(ft.Row([edit_button, delete_button], spacing=5))
-                
-                # Asegurar que haya exactamente 12 celdas (11 columnas de datos + 1 de acciones)
-                if len(cells) == 11:  # Si hay 11 celdas de datos
-                    cells.append(actions_cell)  # Agregar la celda de acciones
+
+                if len(cells) == 11:
+                    cells.append(actions_cell)
                 else:
-                    # Si no hay 11 celdas, completar con celdas vacías
                     cells.extend([ft.DataCell(ft.Text(""))] * (11 - len(cells)))
                     cells.append(actions_cell)
-                
-                # Agregar la fila a la tabla
+
                 records_table.rows.append(ft.DataRow(cells=cells))
+
+        print("Total de filas en la tabla después de actualizar:", len(records_table.rows))  # Depuración
 
         pagination_info.value = f"Página {current_page} de {total_pages}"
         page.update()
+        print("Página actualizada.")  # Depuración
+
 
     def go_to_page(page_num: int):
         nonlocal current_page
@@ -418,7 +471,7 @@ def main(page: ft.Page):
         elif page_num > total_pages:
             page_num = total_pages
         current_page = page_num
-        refresh_table()
+        refresh_table(page)
 
     # --------------------------------------------------------------------------
     # DATATABLE

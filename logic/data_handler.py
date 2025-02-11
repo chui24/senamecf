@@ -67,25 +67,16 @@ class DataHandler:
         # Convertir cada fila del DataFrame en una lista
         return self.data.values.tolist()
 
-    def import_data(self, import_path):
-        """
-        Importar datos desde otro archivo Excel.
-        :param import_path: Ruta del archivo Excel a importar.
-        """
+    def import_data(self, file_path):
+        """Importar datos desde un archivo Excel."""
         try:
-            # Guardar el archivo actual antes de importar
-            self.save_data()
-            print(f"Archivo actual guardado en: {self.file_path}")
-
-            # Leer el archivo Excel a importar
-            new_data = pd.read_excel(import_path)
-            # Reemplazar los datos actuales con los nuevos
-            self.data = new_data
-            # Guardar los datos reemplazados en el archivo original
-            self.save_data()
-            print(f"Datos importados correctamente desde {import_path}")
+            new_data = pd.read_excel(file_path)
+            self.data = new_data  # Reemplazar los datos actuales con los nuevos
+            self.save_data()  # Guardar los datos importados en el archivo actual
+            print(f"Datos importados correctamente desde {file_path}")
         except Exception as e:
             print(f"Error al importar datos: {e}")
+
 
     def _generate_backup_path(self):
         """
